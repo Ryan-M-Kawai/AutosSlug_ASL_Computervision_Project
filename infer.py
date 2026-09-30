@@ -3,8 +3,6 @@ Real-time ASL sign recognition using the trained model.
 Detects both hands at once and shows a separate prediction label for
 the left hand and the right hand.
 
-Usage:
-    python infer.py
 """
 
 import os
