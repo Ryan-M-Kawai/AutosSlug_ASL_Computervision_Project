@@ -1,0 +1,29 @@
+# ── Python ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+
+# ── Virtual environment ─────────────────────────────────
+ASL_venv/
+env/
+mediapipe_env/
+.venv/
+# ── Task files ─────────────────────────────────────────
+*.task
+
+
+# ── OS junk ──────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor / IDE ─────────────────────────────────────────
+.vscode/
+.idea/
+*.code-workspace
+
+
+# ── Logs ─────────────────────────────────────────────────
+*.log

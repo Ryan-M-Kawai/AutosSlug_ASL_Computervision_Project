@@ -1,2 +1,4 @@
-# AutosSlug_ASL_Computervision_Project
-Use pytorch and cv to do live inference of ASL
+# Heading 1 (Main Title)
+## Heading 2 (Sections)
+### Heading 3 (Sub-sections)
+# ASL_ComputerVision
