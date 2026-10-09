@@ -74,8 +74,9 @@ def main():
                 correct += (preds == y).sum().item()
 
         val_acc = correct / len(val_ds)
+        if(epoch % 5 == 0):
+            print(f"Epoch {epoch:3d}/{EPOCHS} | train_loss: {train_loss:.4f} | val_acc: {val_acc:.4f}")
 
-        print(f"Epoch {epoch:3d}/{EPOCHS} | train_loss: {train_loss:.4f} | val_acc: {val_acc:.4f}")
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
