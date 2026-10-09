@@ -1,4 +1,5 @@
 # Auto Slug ASL Translator
+![Alt Text](ASL_Demo.gif)
 ## On Boarding
 ### Downloading Requirements
 (Windows)
