@@ -25,7 +25,7 @@ Output:
 import csv
 import os
 from collections import Counter
-
+from helper_functions import load_existing_data, print_summary, delete_label_data, update_readme, download_csv
 import cv2
 import mediapipe as mp
 
@@ -35,82 +35,18 @@ from mediapipe.tasks.python import vision
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 CSV_PATH = os.path.join(DATA_DIR, "landmarks.csv")
 CSV_HEADER = ["label"] + [f"f{i}" for i in range(FEATURE_SIZE)]
-SAMPLES_PER_LABEL_TARGET = 200  # rough guideline, not enforced
 
-
-def ensure_csv_exists(csv_path):
-    if not os.path.exists(csv_path):
-        with open(csv_path, "w", newline="") as f:
-            csv.writer(f).writerow(CSV_HEADER)
-
-
-def load_existing_counts(csv_path):
-    """Return a Counter of {label: sample_count} from an existing CSV, if any."""
-    counts = Counter()
-    if not os.path.exists(csv_path):
-        return counts
-
-    with open(csv_path, "r", newline="") as f:
-        reader = csv.reader(f)
-        next(reader, None)  # skip header
-        for row in reader:
-            if row:
-                counts[row[0]] += 1
-    return counts
-
-
-def print_summary(counts):
-    if not counts:
-        print("No existing data found -- starting fresh.")
-        return
-
-    print("Existing data on file:")
-    for label, n in sorted(counts.items()):
-        print(f"  {label}: {n} samples")
-    print(f"  Total: {sum(counts.values())} samples across {len(counts)} labels")
-
-
-def delete_label_data(csv_path, label):
-    """
-    Permanently remove every row belonging to `label` from the CSV.
-    Returns the number of samples deleted.
-    """
-    if not os.path.exists(csv_path):
-        print("No data file found -- nothing to delete.")
-        return 0
-
-    with open(csv_path, "r", newline="") as f:
-        reader = csv.reader(f)
-        rows = list(reader)
-
-    if not rows:
-        print("Data file is empty -- nothing to delete.")
-        return 0
-
-    header, data_rows = rows[0], rows[1:]
-    kept_rows = [row for row in data_rows if row and row[0] != label]
-    deleted_count = len(data_rows) - len(kept_rows)
-
-    if deleted_count == 0:
-        print(f"No samples found for label '{label}'.")
-        return 0
-
-    with open(csv_path, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(header)
-        writer.writerows(kept_rows)
-
-    print(f"Deleted {deleted_count} samples for label '{label}'.")
-    return deleted_count
-
+# README_PATH = os.path.join(os.path.dirname(__file__), "README.md")
+# START = "<!-- DATA_COUNTS_START -->"
+# END = "<!-- DATA_COUNTS_END -->"
 
 def main():
     os.makedirs(DATA_DIR, exist_ok=True)
-    ensure_csv_exists(CSV_PATH)
+    download_csv(CSV_PATH)
 
-    counts = load_existing_counts(CSV_PATH)
+    counts = load_existing_data(CSV_PATH)
     print_summary(counts)
-
+    update_readme(counts)
     landmarker = create_landmarker(running_mode=vision.RunningMode.VIDEO, num_hands=1)
     cap = cv2.VideoCapture(0)
     timestamp_ms = 0
@@ -118,7 +54,7 @@ def main():
     try:
         while True:
             entry = input(
-                f"\nEnter label to collect (target ~{SAMPLES_PER_LABEL_TARGET} samples), "
+                f"\nEnter label to collect "
                 f"'delete <label>' to remove a label's data, or Ctrl+C to quit: "
             ).strip()
             if not entry:
@@ -189,6 +125,7 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
     landmarker.close()
+    update_readme(counts)
     print(f"Saved data to {CSV_PATH}")
 
 
