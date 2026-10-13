@@ -18,7 +18,6 @@ from Features import FEATURE_SIZE
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 CSV_PATH = os.path.join(DATA_DIR, "landmarks.csv")
 CHECKPOINT_PATH = os.path.join(os.path.dirname(__file__), "asl_model.pth")
-LABEL_MAP_PATH = os.path.join(os.path.dirname(__file__), "label_map.json")
 
 BATCH_SIZE = 32
 EPOCHS = 50
@@ -31,7 +30,6 @@ def main():
     print(f"Using device: {device}")
 
     dataset = ASLLandmarkDataset(CSV_PATH)
-    dataset.save_label_map(LABEL_MAP_PATH)
     num_classes = len(dataset.label_map)
     print(f"Loaded {len(dataset)} samples across {num_classes} classes: {list(dataset.label_map.keys())}")
 

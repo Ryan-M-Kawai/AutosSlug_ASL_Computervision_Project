@@ -28,7 +28,6 @@ def predict(model, device, hand_landmarks, handedness_label):
         logits = model(x)
         probs = torch.softmax(logits, dim=1)
         confidence, pred_idx = probs.max(dim=1)
-    print(f"pred_idx: {pred_idx.item()}")
     return pred_idx.item(), confidence.item()
 
 
@@ -47,7 +46,13 @@ def main():
 
     # num_hands=2 so both hands are detected in the same frame
     landmarker = create_landmarker(running_mode=vision.RunningMode.VIDEO, num_hands=2)
-    cap = cv2.VideoCapture(0)
+    camera_index =0
+    cap = cv2.VideoCapture(camera_index)
+    if not cap.isOpened():
+        print("Could not open camera")
+        
+    else:
+        print("Camera opened successfully using ")
     timestamp_ms = 0
 
     while cap.isOpened():
@@ -91,6 +96,7 @@ def main():
 
         cv2.imshow("ASL Recognition", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            print("Exiting...")
             break
 
     cap.release()
