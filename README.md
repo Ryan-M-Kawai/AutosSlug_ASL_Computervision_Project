@@ -10,4 +10,4 @@ Then run pip install -r requirements.txt
 ### Homework
 Submit a pr and commit a message on the README so we know you know git
 - Alex Knows how to use Github
-- dxfcghyjukikl
+- Riley can use Git
