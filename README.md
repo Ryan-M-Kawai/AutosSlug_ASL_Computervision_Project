@@ -4,7 +4,7 @@
 ### Downloading Requirements
 (Windows)
 create a virtual enviroment with python -m venv .venv
-Enter the venv with source .venv/bin/activate
+Enter the venv with .venv\Scripts\activate.
 Then run pip install -r requirements.txt
 
 ### Homework
