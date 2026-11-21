@@ -3,22 +3,33 @@ Real-time ASL sign recognition using the trained model.
 Detects both hands at once and shows a separate prediction label for
 the left hand and the right hand.
 
+A chart of the model's per-class probabilities for each detected hand is
+drawn in a panel to the right of the camera image.
+
+Keys:
+    q   quit
+    c   switch the panel between a bar chart and a pie chart
 """
 
 import os
 
 import cv2
 import mediapipe as mp
+import numpy as np
 import torch
 from mediapipe.tasks.python import vision
 
 from Features import create_landmarker, get_features, HAND_CONNECTIONS
 from Classifier import ASLClassifier
 from helper_functions import draw_landmarks
+from Visualization import render_panel
 CHECKPOINT_PATH = os.path.join(os.path.dirname(__file__), "asl_model.pth")
 
 
 CONFIDENCE_THRESHOLD = 0.8
+
+# Chart title colours, matching the label colours drawn on the frame below.
+HAND_COLORS = {"Right": (0, 255, 0), "Left": (200, 0, 255)}
 
 def predict(model, device, hand_landmarks, handedness_label):
     features = get_features(hand_landmarks, handedness_label)
@@ -28,7 +39,7 @@ def predict(model, device, hand_landmarks, handedness_label):
         logits = model(x)
         probs = torch.softmax(logits, dim=1)
         confidence, pred_idx = probs.max(dim=1)
-    return pred_idx.item(), confidence.item()
+    return pred_idx.item(), confidence.item(), probs[0].cpu().numpy()
 
 
 def main():
@@ -37,6 +48,8 @@ def main():
     checkpoint = torch.load(CHECKPOINT_PATH, map_location=device)
     label_map = checkpoint["label_map"]
     idx_to_label = {v: k for k, v in label_map.items()}
+    class_names = [idx_to_label[i] for i in range(len(idx_to_label))]  # in model-output order
+    chart_mode = "bar"
 
     model = ASLClassifier(
         input_size=checkpoint["input_size"], num_classes=checkpoint["num_classes"]
@@ -68,13 +81,16 @@ def main():
         timestamp_ms += 1
 
         left_text, right_text = None, None
+        hands = []  # (title, probabilities, colour) per detected hand, for the chart panel
 
         for hand_landmarks, handedness in zip(result.hand_landmarks, result.handedness):
             handedness_label = handedness[0].category_name  # "Left" or "Right"
             draw_landmarks(frame, hand_landmarks)
 
-            pred_idx, confidence = predict(model, device, hand_landmarks, handedness_label)
+            pred_idx, confidence, probs = predict(model, device, hand_landmarks, handedness_label)
             pred_label = idx_to_label[pred_idx]
+            hands.append((f"{handedness_label} hand", probs,
+                          HAND_COLORS.get(handedness_label, (255, 255, 255))))
 
             if confidence >= CONFIDENCE_THRESHOLD:
                 text = f"{handedness_label}: {pred_label} ({confidence:.2f})"
@@ -94,10 +110,15 @@ def main():
         if right_text:
             cv2.putText(frame, right_text, (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (200, 0, 255), 3)
 
-        cv2.imshow("ASL Recognition", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        panel = render_panel(hands, class_names, frame.shape[0], chart_mode, CONFIDENCE_THRESHOLD)
+        cv2.imshow("ASL Recognition", np.hstack([frame, panel]))
+
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
             print("Exiting...")
             break
+        if key == ord('c'):
+            chart_mode = "pie" if chart_mode == "bar" else "bar"
 
     cap.release()
     cv2.destroyAllWindows()
